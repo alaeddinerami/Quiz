@@ -80,7 +80,7 @@ $currentQuestionId = isset($_SESSION["current_question_id"]) ? $_SESSION["curren
 
         function fetchNextQuestion() {
 
-            page++;
+
             if (page <= 10) {
                 pageNumber.textContent = page;
                 fetch('./../controller/qzz.php', {
@@ -100,11 +100,40 @@ $currentQuestionId = isset($_SESSION["current_question_id"]) ? $_SESSION["curren
                         console.error('Error:', error);
                     });
             } else {
-                window.location.replace("resuls")
+                var screen = document.querySelector('.h-screen');
+                screen.innerHTML = '';
+
+                
+                var container = document.createElement('div');
+                container.classList.add('flex', 'items-center', 'justify-center', 'h-full', 'flex-col'); 
+
+                
+                var h1 = document.createElement('h1');
+                h1.classList.add('text-4xl', 'font-bold', 'text-white', 'mb-2'); 
+                h1.innerText = "YOUR SCORE: " + score; 
+
+                
+                var percentage = document.createElement('h2');
+                percentage.classList.add('text-2xl', 'text-white');
+                if (score >= 70) {
+                    percentage.innerText = "CONGRATULATIONS!";
+                } else {
+                    percentage.innerText = "SORRY, BETTER LUCK NEXT TIME.";
+                }
+
+                
+                container.appendChild(h1);
+                container.appendChild(percentage);
+
+                
+                screen.appendChild(container);
+
+
             }
 
-
+            page++;
         }
+
 
         function updateUI(data) {
             // Update question 
