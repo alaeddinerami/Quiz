@@ -1,6 +1,5 @@
 <?php
 require_once("../controller/quize.php");
-session_start();
 
 if (empty($_SESSION["pseudo_name"])) {
     header('location:index.php');
@@ -36,7 +35,7 @@ $currentQuestionId = isset($_SESSION["current_question_id"]) ? $_SESSION["curren
 
                 <div>
                     <input type="radio" id="response-<?php echo $index; ?>" name="hosting" value="" class="hidden peer">
-                    <input type="hidden" name="statusReponse[]" value="<?= $response['statusReponse']; ?>">
+                    <input type="hidden" id="statusR-<?php echo $index; ?>" name="statusReponse[]" value="<?= $response['statusReponse']; ?>">
                     <label for="response-<?php echo $index; ?>" class="inline-flex items-center justify-between w-full p-5 text-gray-500 bg-white border border-gray-200 rounded-lg cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-blue-500 peer-checked:border-blue-600 peer-checked:text-blue-600 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700">
                         <div class="block">
                             <div class="w-full text-lg font-semibold" id="responseText-<?php echo $index; ?>"><?php echo $response['textReponse']; ?></div>
@@ -58,8 +57,7 @@ $currentQuestionId = isset($_SESSION["current_question_id"]) ? $_SESSION["curren
 
         btnNext.addEventListener("click", function(event) {
             event.preventDefault();
-            page++;
-            pageNumber.textContent = page;
+
 
             var checkedRadio = document.querySelector('input[name="hosting"]:checked');
             if (checkedRadio) {
@@ -68,46 +66,70 @@ $currentQuestionId = isset($_SESSION["current_question_id"]) ? $_SESSION["curren
                 if (hiddenInputValue == 1) {
                     score += 10;
                     scoreValue.textContent = score;
+                    fetchNextQuestion();
                 }
+                fetchNextQuestion();
+
+
+            } else {
+                console.log("ha9");
             }
 
-            fetchNextQuestion();
+
         });
 
         function fetchNextQuestion() {
-            fetch('./../controller/qzz.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        currentQuestionId: currentQuestionId
-                    }),
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log(data);
-                    currentQuestionId = data.question[0].idQuestion;
-                    updateUI(data);
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                });
+
+            page++;
+            if (page <= 10) {
+                pageNumber.textContent = page;
+                fetch('./../controller/qzz.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data);
+                        currentQuestionId = data.question[0].idQuestion;
+                        updateUI(data);
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                    });
+            } else {
+                window.location.replace("resuls")
+            }
+
+
         }
 
         function updateUI(data) {
-            // Update question text
+            // Update question 
+
+
+            console.log(data);
             document.querySelector('#questionText').textContent = data.question[0].Question;
 
-            // Update response options
+
             const responsesArray = data.responses;
+
+            console.log(responsesArray);
 
             responsesArray.forEach((response, index) => {
                 const responseElement = document.querySelector(`#response-${index}`);
-                const statusInput = document.querySelector(`input[name="statusReponse[]"][value="${response.statusReponse}"]`);
+                const statusInput = document.querySelector(`#statusR-<?php echo $index; ?>`);
                 const responseTextElement = document.querySelector(`#responseText-${index}`);
-                const explicationElement = document.querySelector(`#explicationText-${index}`);
-                // console.log(response.idReponse)
+
+                statusInput.value = response.statusReponse
+
+                responseElement.value = response.textReponse
+                responseTextElement.textContent = response.textReponse
+
+                responseElement.checked = false;
+
 
             });
         }
