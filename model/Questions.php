@@ -14,7 +14,7 @@ class Questions
 
     public function afficheQuestions()
     {
-        $sql = "select * from questions";
+        $sql = "SELECT * FROM questions as q WHERE q.idQuestion ORDER BY RAND() LIMIT 1";
         $query = $this->db->connect()->query($sql);
         $result = $query->fetchAll(PDO::FETCH_ASSOC);
         return $result;
@@ -22,5 +22,5 @@ class Questions
 }
 
 
-$q = new Questions();
-var_dump($q->afficheQuestions());
+// $q = new Questions();
+// var_dump($q->afficheQuestions());

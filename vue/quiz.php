@@ -1,66 +1,117 @@
 <?php
-// require("../controller/question.php");
+require_once("../controller/quize.php");
 session_start();
-  if(empty($_SESSION["pseudo_name"])){
+
+if (empty($_SESSION["pseudo_name"])) {
     header('location:index.php');
-}else 
-{
-   $name= $_SESSION["pseudo_name"];
-    echo $name;
+} else {
+    $name = $_SESSION["pseudo_name"];
 }
 
-
+$currentQuestionId = isset($_SESSION["current_question_id"]) ? $_SESSION["current_question_id"] : $questions[0]["idQuestion"];
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Game</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-100 h-screen flex items-center justify-center">
-
-    <div class="bg-white p-8 rounded-md shadow-md max-w-md w-full">
-
-        <!-- Question -->
-        <h2 class="text-2xl font-semibold mb-4">Question: What is the capital of France?</h2>
-
-        <!-- Answer Options Form -->
-        <form action="process_answer.php" method="post">
-
-            <div class="grid grid-cols-2 gap-4">
-                <!-- Option 1 -->
-                <label>
-                    <input type="radio" name="answer" value="paris" class="hidden">
-                    <button type="submit" class="py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:bg-blue-700">Paris</button>
-                </label>
-
-                <!-- Option 2 -->
-                <label>
-                    <input type="radio" name="answer" value="berlin" class="hidden">
-                    <button type="submit" class="py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:bg-blue-700">Berlin</button>
-                </label>
-
-                <!-- Option 3 -->
-                <label>
-                    <input type="radio" name="answer" value="madrid" class="hidden">
-                    <button type="submit" class="py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:bg-blue-700">Madrid</button>
-                </label>
-
-                <!-- Option 4 -->
-                <label>
-                    <input type="radio" name="answer" value="rome" class="hidden">
-                    <button type="submit" class="py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:bg-blue-700">Rome</button>
-                </label>
-            </div>
-
-        </form>
-
+<body class="h-screen bg-cover bg-center bg-no-repeat bg-fixed backdrop-brightness-50 bg-[url('../images/2020_07_what_is_aws.jpg')]">
+    <div class="absolute top-0 left-0 p-2 bg-gray-900 text-white">
+        Score: <span id="scoreValue">0</span>
     </div>
+    <div class="absolute top-0 right-0 p-2 bg-gray-900 text-white">
+        Page: <span id="pageNumber">1</span> / 10
+    </div>
+    <h1 class="pt-3 text-center text-white text-lg">Welcome <?php echo $name ?></h1>
+    <section class="h-5/6 p-5 flex flex-col justify-evenly">
+        <h3 class="text-center text-white mb-5 font-medium text-4xl dark:text-white" id="questionText"><?= $questions[0]["Question"] ?></h3>
+        <form class="grid w-full gap-6 md:grid-cols-2">
+            <?php foreach ($reponse as $index => $response) : ?>
 
+                <div>
+                    <input type="radio" id="response-<?php echo $index; ?>" name="hosting" value="" class="hidden peer">
+                    <input type="hidden" name="statusReponse[]" value="<?= $response['statusReponse']; ?>">
+                    <label for="response-<?php echo $index; ?>" class="inline-flex items-center justify-between w-full p-5 text-gray-500 bg-white border border-gray-200 rounded-lg cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-blue-500 peer-checked:border-blue-600 peer-checked:text-blue-600 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700">
+                        <div class="block">
+                            <div class="w-full text-lg font-semibold" id="responseText-<?php echo $index; ?>"><?php echo $response['textReponse']; ?></div>
+                        </div>
+                    </label>
+                </div>
+            <?php endforeach; ?>
+            <button type="submit" id="next" name="next" class="w-1/2 mt-4 px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-700 focus:outline-none self-end">Start</button>
+        </form>
+    </section>
+    <script>
+        let page = 1
+        let score = 0
+        const pageNumber = document.querySelector("#pageNumber")
+        const btnNext = document.querySelector("#next");
+        const scoreValue = document.querySelector("#scoreValue")
+
+        let currentQuestionId = <?php echo $currentQuestionId; ?>;
+
+        btnNext.addEventListener("click", function(event) {
+            event.preventDefault();
+            page++;
+            pageNumber.textContent = page;
+
+            var checkedRadio = document.querySelector('input[name="hosting"]:checked');
+            if (checkedRadio) {
+                var hiddenInputValue = checkedRadio.nextElementSibling.value;
+                console.log(hiddenInputValue);
+                if (hiddenInputValue == 1) {
+                    score += 10;
+                    scoreValue.textContent = score;
+                }
+            }
+
+            fetchNextQuestion();
+        });
+
+        function fetchNextQuestion() {
+            fetch('./../controller/qzz.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        currentQuestionId: currentQuestionId
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    currentQuestionId = data.question[0].idQuestion;
+                    updateUI(data);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function updateUI(data) {
+            // Update question text
+            document.querySelector('#questionText').textContent = data.question[0].Question;
+
+            // Update response options
+            const responsesArray = data.responses;
+
+            responsesArray.forEach((response, index) => {
+                const responseElement = document.querySelector(`#response-${index}`);
+                const statusInput = document.querySelector(`input[name="statusReponse[]"][value="${response.statusReponse}"]`);
+                const responseTextElement = document.querySelector(`#responseText-${index}`);
+                const explicationElement = document.querySelector(`#explicationText-${index}`);
+                // console.log(response.idReponse)
+
+            });
+        }
+    </script>
 </body>
 
 </html>
